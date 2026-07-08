@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- PDF Libraries -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+<!-- SweetAlert2 untuk Notifikasi Mewah -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<!-- Flatpickr CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/airbnb.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/id.js"></script>
+  
+  <style>
+    body { font-family: 'Poppins', sans-serif; background-color: #f0f2f5; color: #333; }
+    .main-container { max-width: 1100px; margin: 30px auto; padding: 0 15px; }
+    
+    /* Card Styles */
+    .card { border: none; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); background: #fff; }
+    
+    /* Summary Cards */
+    .summary-card { padding: 25px; border-radius: 20px; color: white; position: relative; overflow: hidden; border: none; transition: transform 0.3s; }
+    .summary-card:hover { transform: translateY(-5px); }
+    .bg-masuk { background: linear-gradient(135deg, #11998e, #38ef7d); }
+    .bg-keluar { background: linear-gradient(135deg, #cb2d3e, #ef473a); }
+    .bg-saldo { background: linear-gradient(135deg, #00c6ff, #0072ff); }
+    .summary-card i { position: absolute; right: -15px; bottom: -15px; font-size: 6rem; opacity: 0.15; }
+    
+    /* Modal Styling */
+    .modal-content { border-radius: 20px; border: none; box-shadow: 0 25px 50px rgba(0,0,0,0.2); }
+    .modal-header { background: #232526; color: white; border-radius: 20px 20px 0 0; padding: 20px 30px; }
+    .modal-body { padding: 30px; }
+    .btn-close-white { filter: invert(1) grayscale(100%) brightness(200%); }
+    
+    /* Form Customization */
+    .form-label { font-weight: 600; font-size: 0.85rem; color: #555; }
+    .form-control, .form-select { border-radius: 12px; padding: 12px; border: 1px solid #e0e0e0; }
+    textarea.form-control { resize: none; }
+
+    /* Table & Search */
+    /* Container Utama Pencarian */
+.luxury-search-wrapper {
+  position: relative; /* KUNCI UTAMA: Agar tombol X tidak lari keluar */
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+/* Input Pencarian Mewah */
+.luxury-search-input {
+  height: 45px;
+  border-radius: 30px !important;
+  padding-left: 45px !important; /* Ruang untuk ikon kaca pembesar di kiri */
+  padding-right: 45px !important; /* Ruang untuk ikon X di kanan */
+  border: 1px solid #e0e0e0 !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+}
+
+.luxury-search-input:focus {
+  border-color: #232526 !important;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+}
+
+/* Ikon Kaca Pembesar (Kiri) */
+.main-search-icon {
+  position: absolute;
+  left: 18px;
+  color: #aaa;
+  z-index: 10;
+  pointer-events: none; /* Agar tidak menghalangi klik pada input */
+}
+
+/* Ikon Tombol X (Kanan) */
+.clear-search-icon {
+  position: absolute;
+  right: 15px; /* KUNCI: Menempel ke sisi kanan */
+  color: #ccc;
+  cursor: pointer;
+  display: none; /* Default tersembunyi */
+  z-index: 10;
+  font-size: 1.2rem;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.clear-search-icon:hover {
+  color: #e74c3c;
+  transform: scale(1.1); /* Efek membesar sedikit saat disentuh */
+}
+
+    .btn-tambah { background: #232526; color: white; border-radius: 30px; padding: 10px 25px; font-weight: 600; border: none; transition: 0.3s; }
+    .btn-tambah:hover { background: #414345; color: white; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+    /* Kustomisasi Flatpickr agar Mewah */
+.flatpickr-calendar {
+  border-radius: 15px !important;
+  box-shadow: 0 15px 30px rgba(0,0,0,0.1) !important;
+  border: none !important;
+  font-family: 'Poppins', sans-serif !important;
+}
+
+.flatpickr-day.today { border-color: #232526 !important; }
+.flatpickr-day.selected { background: #232526 !important; border-color: #232526 !important; }
+
+/* Warna Merah untuk Sabtu (6) dan Minggu (0) */
+.flatpickr-day.weekend-red {
+  color: #e74c3c !important;
+  font-weight: 600;
+}
+
+/* Mempercantik input saat fokus */
+.flatpickr-input[readonly] {
+  background-color: #fff !important;
+  cursor: pointer;
+}
+
+/* Animasi Loading Spinner Mewah */
+.loader-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+
+.lux-spinner {
+  width: 50px;
+  height: 50px;
+  border: 3px solid rgba(0,0,0,0.1);
+  border-radius: 50%;
+  border-top-color: #232526;
+  animation: spin 1s ease-in-out infinite;
+  margin-bottom: 15px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Efek Skeleton Loading (Opsional untuk baris tabel) */
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+  border-radius: 4px;
+  height: 20px;
+  width: 100%;
+}
+
+@keyframes skeleton-loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Overlay Loading untuk seluruh halaman saat proses simpan/hapus */
+#fullPageLoader {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(255,255,255,0.7);
+  backdrop-filter: blur(5px);
+  display: none;
+  z-index: 1050; /* DIUBAH DARI 9999 KE 1050 */
+  align-items: center;
+  justify-content: center;
+}
+
+/* Padding kanan ditambahkan agar teks tidak tertutup tombol X */
+.search-box { 
+  padding-right: 40px !important; 
+}
+
+.clear-search {
+  position: absolute;
+  right: 15px;      /* Jarak dari sisi kanan */
+  top: 50%;         /* Tengah secara vertikal */
+  transform: translateY(-50%); /* Penyeimbang agar benar-benar di tengah */
+  color: #ccc;
+  cursor: pointer;
+  display: none;    /* Muncul hanya saat ada teks */
+  z-index: 5;       /* Agar berada di atas input */
+  transition: color 0.2s;
+}
+
+.clear-search:hover {
+  color: #e74c3c;
+}
+  </style>
+</head>
+<body>
+
+  <div id="fullPageLoader">
+  <div class="loader-container">
+    <div class="lux-spinner"></div>
+    <div class="fw-bold text-dark">Mohon Tunggu...</div>
+  </div>
+</div>
+
+<div class="container main-container">
+  <!-- Header Title & Action -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h3 class="fw-bold m-0">Dashboard Keuangan</h3>
+      <p class="text-muted small">Kelola penerimaan dan pengeluaran kas Anda</p>
+    </div>
+    <div class="d-flex gap-2">
+      <!-- Ganti tombol export lama dengan ini -->
+      <button class="btn btn-outline-danger shadow-sm rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#modalExport">
+        <i class="fas fa-file-pdf me-2"></i> Export PDF
+      </button>
+      <button class="btn btn-tambah shadow-sm" data-bs-toggle="modal" data-bs-target="#modalTransaksi">
+        <i class="fas fa-plus me-2"></i> Tambah Transaksi
+      </button>
+    </div>
+  </div>
+
+  <!-- Dashboard Cards -->
+  <div class="row g-4 mb-5">
+    <div class="col-md-4">
+      <div class="card summary-card bg-masuk">
+        <small class="text-uppercase fw-bold opacity-75">Penerimaan</small>
+        <h2 id="txtTotalMasuk" class="m-0 fw-bold">Rp 0</h2>
+        <i class="fas fa-arrow-down"></i>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card summary-card bg-keluar">
+        <small class="text-uppercase fw-bold opacity-75">Pengeluaran</small>
+        <h2 id="txtTotalKeluar" class="m-0 fw-bold">Rp 0</h2>
+        <i class="fas fa-arrow-up"></i>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card summary-card bg-saldo">
+        <small class="text-uppercase fw-bold opacity-75">Saldo Kas</small>
+        <h2 id="txtSaldo" class="m-0 fw-bold">Rp 0</h2>
+        <i class="fas fa-wallet"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- Table Card -->
+  <div class="card shadow-sm">
+    <div class="card-body p-4">
+      <div class="row mb-4 align-items-center">
+        <div class="col-md-7">
+          <h5 class="fw-bold m-0">Riwayat Buku Kas</h5>
+        </div>
+        <div class="col-md-5">
+          <div class="luxury-search-wrapper">
+            <i class="fas fa-search main-search-icon"></i>
+            <input type="text" id="searchInput" class="form-control luxury-search-input" placeholder="Cari uraian transaksi...">
+            <i class="fas fa-times-circle clear-search-icon" id="clearSearch" title="Hapus"></i>
+          </div>
+        </div>
+      </div>
+      
+      <div class="table-responsive">
+        <table class="table hover">
+          <thead>
+            <tr>
+              <th width="50">No</th>
+              <th width="120">Tanggal</th>
+              <th>Uraian</th>
+              <th class="text-end" width="140">Penerimaan</th>
+              <th class="text-end" width="140">Pengeluaran</th>
+              <th class="text-end" width="150">Saldo</th>
+              <th class="text-center" width="100">Aksi</th> <!-- TAMBAHKAN INI -->
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <tr>
+              <td colspan="7">
+                <div class="loader-container">
+                  <div class="lux-spinner"></div>
+                  <div class="text-muted small">Sinkronisasi data dengan server...</div>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="d-flex justify-content-between align-items-center mt-4">
+        <p id="pageInfo" class="small text-muted m-0 fw-bold"></p>
+        <nav>
+          <ul class="pagination pagination-sm m-0">
+            <li class="page-item"><button class="page-link px-3" onclick="prevPage()" id="btnPrev">Prev</button></li>
+            <li class="page-item"><button class="page-link px-3" onclick="nextPage()" id="btnNext">Next</button></li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL FORM INPUT -->
+<div class="modal fade" id="modalTransaksi" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold"><i class="fas fa-edit me-2"></i> Input Transaksi Baru</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="formKas">
+          <div class="row g-3 mb-4">
+            <div class="col-md-4">
+              <label class="form-label">Tanggal</label>
+              <input type="text" class="form-control datepicker" id="tanggal" placeholder="Pilih Tanggal..">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Jenis Transaksi</label>
+              <select class="form-select" id="jenis" required>
+                <option value="Penerimaan">Penerimaan (+)</option>
+                <option value="Pengeluaran">Pengeluaran (-)</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Jumlah Uang (Rp)</label>
+              <!-- Tipe diubah ke text agar bisa diformat dengan titik -->
+              <input type="text" class="form-control" id="jumlah" placeholder="0" required>
+            </div>
+          </div>
+          
+          <div class="mb-4">
+            <label class="form-label">Uraian / Keterangan</label>
+            <textarea class="form-control" id="uraian" rows="4" placeholder="Tuliskan detil transaksi di sini..." required></textarea>
+          </div>
+
+          <div class="text-end">
+            <button type="button" class="btn btn-light px-4 me-2 rounded-pill" data-bs-dismiss="modal">Batal</button>
+            <button type="submit" id="btnSimpan" class="btn btn-dark px-5 rounded-pill fw-bold">
+              <i class="fas fa-save me-2"></i> Simpan Data
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EXPORT PDF -->
+<div class="modal fade" id="modalExport" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title fw-bold"><i class="fas fa-file-pdf me-2"></i> Export PDF</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-4">
+        <div class="mb-3">
+          <label class="form-label fw-bold">Pilih Rentang Data:</label>
+          <div class="form-check mb-2">
+            <input class="form-check-input" type="radio" name="rangeType" id="rangeAll" value="all" checked onchange="toggleDateInputs()">
+            <label class="form-check-label" for="rangeAll">Semua Data (Seluruh Riwayat)</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="rangeType" id="rangeCustom" value="custom" onchange="toggleDateInputs()">
+            <label class="form-check-label" for="rangeCustom">Rentang Tanggal Spesifik</label>
+          </div>
+        </div>
+
+        <div id="dateInputSection" style="display: none;">
+          <div class="row g-2">
+            <div class="col-6">
+              <label class="small fw-bold">Dari Tanggal:</label>
+              <input type="text" id="exportStart" class="form-control datepicker" placeholder="Mulai..">
+            </div>
+            <div class="col-6">
+              <label class="small fw-bold">Sampai Tanggal:</label>
+              <input type="text" id="exportEnd" class="form-control datepicker" placeholder="Sampai..">
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Batal</button>
+        <button type="button" class="btn btn-danger rounded-pill px-4 fw-bold" onclick="processExportPDF()">
+          <i class="fas fa-download me-2"></i> Download PDF
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- JS Dependencies -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+  // Global Variables
+  let rawData = [];
+  let filteredData = [];
+  let currentPage = 1;
+  const rowsPerPage = 5;
+  let fpTanggal, fpStart, fpEnd;
+  let modalElement;
+  let isEditMode = false;
+  let editNo = null;
+
+  // 1. Jalankan inisialisasi saat halaman siap
+  document.addEventListener('DOMContentLoaded', () => {
+    // Inisialisasi Modal Bootstrap
+    modalElement = new bootstrap.Modal(document.getElementById('modalTransaksi'));
+
+    // Definisi elemen
+    const searchInput = document.getElementById('searchInput');
+    const clearBtn = document.getElementById('clearSearch');
+
+    // Event saat mengetik di kolom pencarian
+    searchInput.addEventListener('input', function() {
+      // Tampilkan tombol X jika ada teks, sembunyikan jika kosong
+      clearBtn.style.display = this.value.length > 0 ? 'block' : 'none';
+      
+      currentPage = 1;
+      applyFilter();
+    });
+
+    // Event saat tombol X diklik
+    clearBtn.addEventListener('click', function() {
+      searchInput.value = '';        // Kosongkan input
+      this.style.display = 'none';   // Sembunyikan tombol X sendiri
+      
+      currentPage = 1;
+      applyFilter();                 // Refresh tabel (tampilkan semua data)
+      searchInput.focus();           // Kembalikan fokus ke input
+    });
+    
+    // Panggil fungsi inisialisasi
+    initDatePickers();
+    loadData();
+  });
+
+  // 2. Fungsi Inisialisasi Flatpickr
+  function initDatePickers() {
+    const config = {
+      locale: "id",
+      dateFormat: "Y-m-d",
+      altInput: true,
+      altFormat: "d F Y",
+      allowInput: true,
+      onDayCreate: function(dObj, dStr, fp, dayElem) {
+        if (dayElem.dateObj.getDay() === 0 || dayElem.dateObj.getDay() === 6) {
+          dayElem.classList.add("weekend-red");
+        }
+      }
+    };
+
+    fpTanggal = flatpickr("#tanggal", { ...config, defaultDate: "today" });
+    fpStart = flatpickr("#exportStart", config);
+    fpEnd = flatpickr("#exportEnd", config);
+  }
+
+  // 3. Ambil Data dari Database
+  // Fungsi Pembantu Loading
+function toggleFullLoader(show) {
+  document.getElementById('fullPageLoader').style.display = show ? 'flex' : 'none';
+}
+
+function loadData() {
+  // Set tampilan tabel ke loading
+  document.getElementById('tableBody').innerHTML = `
+    <tr>
+      <td colspan="7">
+        <div class="loader-container">
+          <div class="lux-spinner"></div>
+          <div class="text-muted small">Sinkronisasi data...</div>
+        </div>
+      </td>
+    </tr>
+  `;
+
+  google.script.run
+  .withSuccessHandler((data) => {
+    // Cek jika data null atau undefined
+    if (!data || data.length === 0) {
+      rawData = [];
+      filteredData = [];
+      document.getElementById('tableBody').innerHTML = '<tr><td colspan="7" class="text-center py-5">Belum ada data transaksi</td></tr>';
+      updateDashboard(0, 0, 0);
+      toggleFullLoader(false);
+      return;
+    }
+
+    // Sort aman
+    data.sort((a, b) => new Date(a[1]) - new Date(b[1]));
+    rawData = data;
+    applyFilter();
+    toggleFullLoader(false);
+  })
+  .withFailureHandler((err) => {
+    toggleFullLoader(false);
+    document.getElementById('tableBody').innerHTML = '<tr><td colspan="7" class="text-center text-danger">Gagal memuat data</td></tr>';
+  }).ambilData();
+}
+
+  // 4. Filter & Hitung Saldo
+  function applyFilter() {
+  const key = (document.getElementById('searchInput').value || "").toLowerCase();
+  let filtered = rawData.filter(r => (r[3] || "").toLowerCase().includes(key));
+  
+  let runningBalance = 0;
+  let totalMasuk = 0;
+  let totalKeluar = 0;
+
+  filteredData = filtered.map((row) => {
+    // Proteksi jika row[4] kosong
+    let jmlStr = row[4] ? row[4].toString() : "0";
+    let jml = parseFloat(jmlStr.replace(/[Rp,. ]/g, '')) || 0;
+    
+    let masuk = row[2] === 'Penerimaan' ? jml : 0;
+    let keluar = row[2] === 'Pengeluaran' ? jml : 0;
+    
+    totalMasuk += masuk;
+    totalKeluar += keluar;
+    runningBalance += (masuk - keluar);
+
+    return { 
+      noAsli: row[0],
+      tanggal: row[1], 
+      uraian: row[3], 
+      penerimaan: masuk, 
+      pengeluaran: keluar, 
+      saldo: runningBalance 
+    };
+  });
+
+  updateDashboard(totalMasuk, totalKeluar, runningBalance);
+  renderTable();
+}
+
+function updateDashboard(masuk, keluar, saldo) {
+  document.getElementById('txtTotalMasuk').innerText = 'Rp ' + masuk.toLocaleString('id-ID');
+  document.getElementById('txtTotalKeluar').innerText = 'Rp ' + keluar.toLocaleString('id-ID');
+  document.getElementById('txtSaldo').innerText = 'Rp ' + saldo.toLocaleString('id-ID');
+}
+
+  // 5. Render Tabel ke HTML
+  function renderTable() {
+    const tbody = document.getElementById('tableBody');
+    tbody.innerHTML = '';
+    
+    if (filteredData.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center py-5">Tidak ada data transaksi</td></tr>';
+      return;
+    }
+
+    const start = (currentPage - 1) * rowsPerPage;
+    const end = start + rowsPerPage;
+    const items = filteredData.slice(start, end);
+
+    items.forEach((item, i) => {
+      const tr = document.createElement('tr');
+      // Ambil No asli dari data untuk referensi Edit/Hapus
+      const dataAsli = rawData.find(r => r[1] === item.tanggal && r[3] === item.uraian);
+      const noAsli = dataAsli ? dataAsli[0] : '';
+
+      tr.innerHTML = `
+        <td class="text-muted small">${start + i + 1}</td>
+        <td>${formatTanggalIndo(item.tanggal)}</td>
+        <td style="word-break: break-word;">${item.uraian}</td>
+        <td class="text-end text-success fw-bold">${item.penerimaan > 0 ? 'Rp ' + item.penerimaan.toLocaleString('id-ID') : '-'}</td>
+        <td class="text-end text-danger fw-bold">${item.pengeluaran > 0 ? 'Rp ' + item.pengeluaran.toLocaleString('id-ID') : '-'}</td>
+        <td class="text-end fw-bold bg-light">Rp ${item.saldo.toLocaleString('id-ID')}</td>
+        <td class="text-center">
+          <div class="btn-group">
+            <button class="btn btn-sm btn-outline-primary border-0" onclick="editData('${noAsli}')" title="Edit">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-danger border-0" onclick="konfirmasiHapus('${noAsli}')" title="Hapus">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    const totalPages = Math.ceil(filteredData.length / rowsPerPage) || 1;
+    document.getElementById('pageInfo').innerText = `Menampilkan ${start + 1}-${Math.min(end, filteredData.length)} dari ${filteredData.length} data`;
+    document.getElementById('btnPrev').disabled = currentPage === 1;
+    document.getElementById('btnNext').disabled = currentPage === totalPages;
+  }
+
+  // 6. Simpan Data Transaksi
+  document.getElementById('formKas').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Ambil elemen tombol di awal agar bisa diakses di seluruh scope fungsi ini
+    const btn = document.getElementById('btnSimpan');
+    
+    // 1. Ambil data saldo & input
+    const saldoSekarang = parseFloat(document.getElementById('txtSaldo').innerText.replace(/[Rp,. ]/g, '')) || 0;
+    const jenis = document.getElementById('jenis').value;
+    const inputRaw = document.getElementById('jumlah').value;
+    const jumlahInput = parseFloat(inputRaw.replace(/\./g, '')) || 0;
+    const uraian = document.getElementById('uraian').value;
+    const tanggal = document.getElementById('tanggal').value;
+
+    // 2. Validasi Dasar
+    if (jumlahInput <= 0) {
+      Swal.fire('Peringatan', 'Jumlah uang harus lebih dari 0', 'warning');
+      return;
+    }
+
+    // 3. Validasi Saldo (Khusus Pengeluaran baru / Non-Edit)
+    if (jenis === "Pengeluaran" && jumlahInput > saldoSekarang && !isEditMode) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Saldo Tidak Mencukupi!',
+        text: `Batas pengeluaran saat ini: Rp ${saldoSekarang.toLocaleString('id-ID')}`,
+        confirmButtonColor: '#232526'
+      });
+      return; 
+    }
+
+    // 4. UI State: Aktifkan Loader & Loading Tombol
+    toggleFullLoader(true); 
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Memproses...';
+
+    // Ambil status sebelum direset
+    const wasEditing = isEditMode;
+    const targetFunction = isEditMode ? 'updateData' : 'simpanData';
+
+    const obj = {
+      no: isEditMode ? editNo : null,
+      tanggal: tanggal,
+      jenis: jenis,
+      uraian: uraian,
+      jumlah: jumlahInput
+    };
+
+    // 5. Jalankan Fungsi Server
+    google.script.run
+    .withSuccessHandler(() => {
+      // Matikan loader layar penuh agar Swal muncul
+      toggleFullLoader(false);
+
+      // Reset Form & State
+      document.getElementById('formKas').reset();
+      if (fpTanggal) fpTanggal.setDate(new Date()); 
+      isEditMode = false;
+      editNo = null;
+
+      // Kembalikan Tampilan UI
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-save me-2"></i> Simpan Data';
+      document.querySelector('#modalTransaksi .modal-title').innerHTML = '<i class="fas fa-plus-circle me-2"></i> Input Transaksi Baru';
+      
+      modalElement.hide(); 
+      
+      Swal.fire({ 
+        icon: 'success', 
+        title: 'Berhasil!', 
+        text: wasEditing ? 'Data telah diperbarui.' : 'Data berhasil disimpan.',
+        showConfirmButton: false, 
+        timer: 1500 
+      });
+      
+      // REFRESH DATA
+      loadData();
+    })
+    .withFailureHandler((err) => {
+      toggleFullLoader(false);
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-save me-2"></i> Simpan Data';
+      Swal.fire('Error Server', err.toString(), 'error');
+    })[targetFunction](obj);
+});
+
+  // 7. Fungsi Utility & Export
+  function formatRupiah(angka) {
+    var number_string = angka.replace(/[^,\d]/g, '').toString(),
+      split = number_string.split(','),
+      sisa = split[0].length % 3,
+      rupiah = split[0].substr(0, sisa),
+      ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+    if (ribuan) {
+      separator = sisa ? '.' : '';
+      rupiah += separator + ribuan.join('.');
+    }
+    return rupiah;
+  }
+
+  document.getElementById('jumlah').addEventListener('keyup', function() {
+    this.value = formatRupiah(this.value);
+  });
+
+  function formatTanggalIndo(dateString) {
+    if (!dateString || !dateString.includes("-")) return dateString;
+    const [year, month, day] = dateString.split("-");
+    return `${day}/${month}/${year}`;
+  }
+
+  function toggleDateInputs() {
+    const isCustom = document.getElementById('rangeCustom').checked;
+    document.getElementById('dateInputSection').style.display = isCustom ? 'block' : 'none';
+  }
+
+  function processExportPDF() {
+    const rangeType = document.querySelector('input[name="rangeType"]:checked').value;
+    let dataToExport = [];
+    let periodText = "SEMUA DATA";
+
+    if (rangeType === 'all') {
+      dataToExport = [...rawData];
+    } else {
+      const start = document.getElementById('exportStart').value;
+      const end = document.getElementById('exportEnd').value;
+      if (!start || !end) {
+        Swal.fire('Peringatan', 'Pilih rentang tanggal!', 'warning');
+        return;
+      }
+      dataToExport = rawData.filter(row => row[1] >= start && row[1] <= end);
+      periodText = `${formatTanggalIndo(start)} s/d ${formatTanggalIndo(end)}`;
+    }
+
+    if (dataToExport.length === 0) {
+      Swal.fire('Info', 'Data tidak ditemukan', 'info');
+      return;
+    }
+
+    bootstrap.Modal.getInstance(document.getElementById('modalExport')).hide();
+    generatePDF(dataToExport, periodText);
+  }
+
+  function generatePDF(dataArray, periodLabel) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF('p', 'mm', 'a4');
+  
+  // 1. Header: Judul Laporan
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(18);
+  doc.text("LAPORAN KAS KEUANGAN", 105, 20, { align: 'center' });
+  
+  // 2. Sub-Header: Periode (TAMBAHAN BARU)
+  doc.setFontSize(11);
+  doc.setFont("helvetica", "bold"); // Dibuat Bold agar jelas
+  doc.text("Periode: " + periodLabel, 105, 27, { align: 'center' });
+  
+  // 3. Sub-Header: Tanggal Cetak (Geser ke bawah sedikit)
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
+  const tglCetak = new Date().toLocaleString('id-ID', { 
+    year: 'numeric', month: 'numeric', day: 'numeric', 
+    hour: '2-digit', minute: '2-digit', second: '2-digit' 
+  });
+  doc.text("Dicetak pada: " + tglCetak, 105, 33, { align: 'center' });
+
+  let runningBalance = 0;
+  let totalMasuk = 0;
+  let totalKeluar = 0;
+
+  // ... (Mapping Data tetap sama seperti sebelumnya) ...
+  const rows = dataArray.map((row, index) => {
+    let jml = parseFloat(row[4].toString().replace(/[Rp,. ]/g, '')) || 0;
+    let masuk = row[2] === 'Penerimaan' ? jml : 0;
+    let keluar = row[2] === 'Pengeluaran' ? jml : 0;
+    totalMasuk += masuk; totalKeluar += keluar; runningBalance += (masuk - keluar);
+
+    return [
+      index + 1,
+      formatTanggalIndo(row[1]),
+      row[3],
+      masuk > 0 ? 'Rp ' + masuk.toLocaleString('id-ID') : '-',
+      keluar > 0 ? 'Rp ' + keluar.toLocaleString('id-ID') : '-',
+      'Rp ' + runningBalance.toLocaleString('id-ID')
+    ];
+  });
+
+  // 4. Konfigurasi Tabel (Sesuaikan startY agar tidak menabrak header)
+  doc.autoTable({
+    head: [['No', 'Tanggal', 'Uraian', 'Penerimaan', 'Pengeluaran', 'Saldo']],
+    body: rows,
+    startY: 40, // DIUBAH DARI 38 KE 40 AGAR ADA JARAK
+    theme: 'grid',
+    styles: { 
+      fontSize: 9, 
+      cellPadding: 3,
+      lineWidth: 0.1,
+      lineColor: [200, 200, 200]
+    },
+    headStyles: { 
+      fillColor: [35, 37, 38],    // Header Hitam
+      textColor: [255, 255, 255], 
+      halign: 'center',
+      lineWidth: 0.1,
+      lineColor: [35, 37, 38]     // Garis header mengikuti warna background
+    },
+    columnStyles: {
+      0: { halign: 'center', cellWidth: 12 },
+      1: { halign: 'center', cellWidth: 30 },
+      2: { halign: 'left' },
+      3: { halign: 'right', cellWidth: 35 },
+      4: { halign: 'right', cellWidth: 35 },
+      5: { halign: 'right', cellWidth: 35, fontStyle: 'bold' }
+    }
+  });
+
+  // 5. Bagian Ringkasan (Footer)
+  const finalY = doc.lastAutoTable.finalY + 15;
+  
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(11);
+  doc.text("RINGKASAN:", 14, finalY);
+  
+  doc.setFont("helvetica", "normal");
+  doc.text("Total Penerimaan  : Rp " + totalMasuk.toLocaleString('id-ID'), 14, finalY + 8);
+  doc.text("Total Pengeluaran : Rp " + totalKeluar.toLocaleString('id-ID'), 14, finalY + 14);
+  
+  // 6. Kotak Saldo Akhir dengan Border Halus
+  doc.setFillColor(245, 245, 245); 
+  doc.setDrawColor(200, 200, 200); // Warna border kotak
+  doc.rect(14, finalY + 19, 90, 10, 'FD'); // 'FD' artinya Fill and Draw (Isi dan Garis)
+  
+  doc.setFont("helvetica", "bold");
+  doc.text("SALDO AKHIR", 20, finalY + 25.5);
+  doc.text(": Rp " + runningBalance.toLocaleString('id-ID'), 55, finalY + 25.5);
+
+  // 7. Simpan File
+  const namaFile = periodLabel === "SEMUA DATA" ? "Laporan_Kas_Semua.pdf" : `Laporan_Kas_${periodLabel}.pdf`;
+  doc.save(namaFile.replace(/[/ ]/g, '_'));
+}
+
+function editData(no) {
+  const data = rawData.find(r => r[0] == no);
+  if (!data) return;
+
+  isEditMode = true;
+  editNo = no;
+
+  // Isi Form Modal
+  fpTanggal.setDate(data[1]);
+  document.getElementById('jenis').value = data[2];
+  document.getElementById('uraian').value = data[3];
+  document.getElementById('jumlah').value = formatRupiah(data[4].toString());
+
+  // Ubah Tampilan Modal
+  document.querySelector('#modalTransaksi .modal-title').innerHTML = '<i class="fas fa-edit me-2"></i> Edit Transaksi';
+  document.getElementById('btnSimpan').innerHTML = '<i class="fas fa-check me-2"></i> Update Data';
+  
+  modalElement.show();
+}
+
+// Fungsi Konfirmasi Hapus
+function konfirmasiHapus(no) {
+  Swal.fire({
+    title: 'Hapus Transaksi?',
+    text: "Data akan dihapus permanen.",
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    confirmButtonText: 'Ya, Hapus!',
+    cancelButtonText: 'Batal'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      toggleFullLoader(true);
+
+      google.script.run
+        .withSuccessHandler((isSuccess) => {
+          if (isSuccess) {
+            // --- TRIK AGAR INSTAN: UPDATE LOKAL ---
+            // Hapus data dari variabel rawData di browser
+            rawData = rawData.filter(row => row[0] != no);
+            
+            // Jalankan filter & render ulang tabel (Saldo otomatis terhitung ulang)
+            applyFilter(); 
+            
+            // Matikan loading SEGERA
+            toggleFullLoader(false);
+
+            Swal.fire({
+              icon: 'success',
+              title: 'Data Terhapus!',
+              showConfirmButton: false,
+              timer: 1000 // Perkecil timer agar lebih cepat
+            });
+          }
+        })
+        .withFailureHandler((err) => {
+          toggleFullLoader(false);
+          Swal.fire('Error', 'Gagal hapus: ' + err, 'error');
+        })
+        .hapusData(no);
+    }
+  });
+}
+
+  // Navigasi Tabel
+  document.getElementById('searchInput').addEventListener('input', () => { currentPage = 1; applyFilter(); });
+  function prevPage() { if(currentPage > 1) { currentPage--; renderTable(); } }
+  function nextPage() { if((currentPage * rowsPerPage) < filteredData.length) { currentPage++; renderTable(); } }
+</script>
+
+</body>
+</html>
