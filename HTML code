@@ -192,6 +192,45 @@
 .clear-search:hover {
   color: #e74c3c;
 }
+
+/* Header Tabel Warna Hijau Mint Solid */
+.table thead th {
+  background-color: #d1e7dd !important; /* Warna Hijau Mint Solid */
+  color: #0f5132 !important;            /* Teks Hijau Gelap agar kontras dan mewah */
+  font-weight: 600 !important;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  padding: 15px !important;
+  border-bottom: 2px solid #badbcc !important; /* Garis bawah tipis agar lebih tegas */
+  text-align: center;
+}
+
+/* Membuat sudut melengkung pada header */
+.table thead tr th:first-child {
+  border-top-left-radius: 15px;
+}
+.table thead tr th:last-child {
+  border-top-right-radius: 15px;
+}
+
+/* Efek hover pada baris agar senada dengan Hijau Mint */
+.table tbody tr:hover {
+  background-color: #f8fffb; /* Hijau sangat muda saat kursor di atas baris */
+  transition: 0.2s;
+}
+
+#rowsPerPageSelect {
+  border-radius: 0 20px 20px 0;
+  border-color: #dee2e6;
+  font-size: 0.85rem;
+}
+.input-group-text {
+  border-radius: 20px 0 0 20px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
   </style>
 </head>
 <body>
@@ -212,7 +251,7 @@
     </div>
     <div class="d-flex gap-2">
       <!-- Ganti tombol export lama dengan ini -->
-      <button class="btn btn-outline-danger shadow-sm rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#modalExport">
+      <button class="btn btn-outline-danger shadow-sm rounded-pill px-4" title="Eksport to PDF" data-bs-toggle="modal" data-bs-target="#modalExport">
         <i class="fas fa-file-pdf me-2"></i> Export PDF
       </button>
       <button class="btn btn-tambah shadow-sm" data-bs-toggle="modal" data-bs-target="#modalTransaksi">
@@ -249,14 +288,28 @@
   <!-- Table Card -->
   <div class="card shadow-sm">
     <div class="card-body p-4">
-      <div class="row mb-4 align-items-center">
-        <div class="col-md-7">
-          <h5 class="fw-bold m-0">Riwayat Buku Kas</h5>
+      <div class="row mb-4 align-items-center g-3">
+        <div class="col-md-4">
+          <h5 class="fw-bold m-0 text-dark">Riwayat Buku Kas</h5>
         </div>
+        <!-- FILTER JUMLAH BARIS -->
+        <div class="col-md-3">
+          <div class="input-group input-group-sm">
+            <label class="input-group-text bg-white border-end-0 text-muted small" for="rowsPerPageSelect">Tampilkan</label>
+            <select class="form-select border-start-0 shadow-none fw-bold" id="rowsPerPageSelect" onchange="changeRowsPerPage()" style="cursor:pointer; color: #555;">
+              <option value="5" selected>5 baris</option>
+              <option value="10">10 baris</option>
+              <option value="25">25 baris</option>
+              <option value="50">50 baris</option>
+              <option value="100">100 baris</option>
+            </select>
+          </div>
+        </div>
+        <!-- KOLOM PENCARIAN -->
         <div class="col-md-5">
           <div class="luxury-search-wrapper">
             <i class="fas fa-search main-search-icon"></i>
-            <input type="text" id="searchInput" class="form-control luxury-search-input" placeholder="Cari uraian transaksi...">
+            <input type="text" id="searchInput" class="form-control luxury-search-input" placeholder="Cari transaksi...">
             <i class="fas fa-times-circle clear-search-icon" id="clearSearch" title="Hapus"></i>
           </div>
         </div>
@@ -337,7 +390,7 @@
           </div>
 
           <div class="text-end">
-            <button type="button" class="btn btn-light px-4 me-2 rounded-pill" data-bs-dismiss="modal">Batal</button>
+            <button type="button" class="btn btn-light rounded-pill" data-bs-dismiss="modal">Batal</button>
             <button type="submit" id="btnSimpan" class="btn btn-dark px-5 rounded-pill fw-bold">
               <i class="fas fa-save me-2"></i> Simpan Data
             </button>
@@ -400,7 +453,7 @@
   let rawData = [];
   let filteredData = [];
   let currentPage = 1;
-  const rowsPerPage = 5;
+  let rowsPerPage = 5;
   let fpTanggal, fpStart, fpEnd;
   let modalElement;
   let isEditMode = false;
@@ -612,15 +665,16 @@ function updateDashboard(masuk, keluar, saldo) {
     }
 
     // 3. Validasi Saldo (Khusus Pengeluaran baru / Non-Edit)
-    if (jenis === "Pengeluaran" && jumlahInput > saldoSekarang && !isEditMode) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Saldo Tidak Mencukupi!',
-        text: `Batas pengeluaran saat ini: Rp ${saldoSekarang.toLocaleString('id-ID')}`,
-        confirmButtonColor: '#232526'
-      });
-      return; 
-    }
+    if (jenis === "Pengeluaran" && jumlahInput > saldoSekarang) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Saldo Tidak Mencukupi!',
+      text: `Anda mencoba mengeluarkan Rp ${jumlahInput.toLocaleString('id-ID')}, sedangkan saldo kas saat ini hanya Rp ${saldoSekarang.toLocaleString('id-ID')}.`,
+      confirmButtonColor: '#232526',
+      borderRadius: '20px'
+    });
+    return; // Berhenti di sini, tidak lanjut simpan
+  }
 
     // 4. UI State: Aktifkan Loader & Loading Tombol
     toggleFullLoader(true); 
@@ -851,6 +905,18 @@ function editData(no) {
   modalElement.show();
 }
 
+function changeRowsPerPage() {
+  const select = document.getElementById('rowsPerPageSelect');
+  // Update nilai rowsPerPage berdasarkan pilihan user
+  rowsPerPage = parseInt(select.value);
+  
+  // Reset ke halaman 1 agar tidak terjadi error index
+  currentPage = 1;
+  
+  // Render ulang tabel dengan jumlah baris baru
+  renderTable();
+}
+
 // Fungsi Konfirmasi Hapus
 function konfirmasiHapus(no) {
   Swal.fire({
@@ -880,7 +946,7 @@ function konfirmasiHapus(no) {
 
             Swal.fire({
               icon: 'success',
-              title: 'Data Terhapus!',
+              title: 'Data Berhasil dihapus!',
               showConfirmButton: false,
               timer: 1000 // Perkecil timer agar lebih cepat
             });
@@ -899,6 +965,30 @@ function konfirmasiHapus(no) {
   document.getElementById('searchInput').addEventListener('input', () => { currentPage = 1; applyFilter(); });
   function prevPage() { if(currentPage > 1) { currentPage--; renderTable(); } }
   function nextPage() { if((currentPage * rowsPerPage) < filteredData.length) { currentPage++; renderTable(); } }
+
+  // Listener otomatis saat modal ditutup
+document.getElementById('modalTransaksi').addEventListener('hidden.bs.modal', function () {
+  // 1. Reset Form (Mengosongkan semua input)
+  document.getElementById('formKas').reset();
+  
+  // 2. Reset Tanggal ke hari ini (Flatpickr)
+  if (fpTanggal) {
+    fpTanggal.setDate(new Date());
+  }
+
+  // 3. Pastikan tombol X pada input jumlah hilang (jika ada)
+  // (Jika Anda punya tombol clear di input jumlah)
+
+  // 4. Reset State Edit Mode (Sangat Penting!)
+  isEditMode = false;
+  editNo = null;
+
+  // 5. Kembalikan judul modal dan teks tombol ke default (Tambah)
+  document.querySelector('#modalTransaksi .modal-title').innerHTML = '<i class="fas fa-edit me-2"></i> Input Transaksi Baru';
+  const btn = document.getElementById('btnSimpan');
+  btn.innerHTML = '<i class="fas fa-save me-2"></i> Simpan Data';
+  btn.disabled = false; // Pastikan tombol tidak dalam keadaan loading
+});
 </script>
 
 </body>
