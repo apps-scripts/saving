@@ -1,0 +1,80 @@
+function doGet() {
+  return HtmlService.createTemplateFromFile('Index')
+    .evaluate()
+    .setTitle('Aplikasi Kas Keuangan Modern')
+    .addMetaTag('viewport', 'width=device-width, initial-scale=1')
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+}
+
+function simpanData(obj) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName("Data");
+  
+  // Jika sheet belum ada, buat otomatis
+  if (!sheet) {
+    sheet = ss.insertSheet("Data");
+    sheet.appendRow(["No", "Tanggal", "Jenis", "Uraian", "Jumlah"]);
+  }
+  
+  const lastRow = sheet.getLastRow();
+  const no = lastRow === 1 ? 1 : parseInt(sheet.getRange(lastRow, 1).getValue()) + 1;
+  
+  sheet.appendRow([
+    no,
+    obj.tanggal,
+    obj.jenis,
+    obj.uraian,
+    parseFloat(obj.jumlah)
+  ]);
+  return "Berhasil";
+}
+
+function ambilData() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName("Data");
+  if (!sheet) return [];
+  
+  const range = sheet.getDataRange();
+  if (range.getLastRow() <= 1) return []; // Jika hanya ada header
+  
+  const data = range.getDisplayValues(); // Menggunakan DisplayValues lebih aman
+  data.shift(); // Hapus header
+  return data;
+}
+
+// Fungsi untuk Menghapus Data
+function hapusData(noUrut) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName("Data");
+  // Hanya ambil kolom pertama (No) untuk mencari, jauh lebih cepat daripada getDataRange()
+  const columnNo = sheet.getRange(1, 1, sheet.getLastRow(), 1).getValues();
+  
+  for (let i = 1; i < columnNo.length; i++) {
+    if (columnNo[i][0] == noUrut) {
+      sheet.deleteRow(i + 1);
+      SpreadsheetApp.flush(); // Paksa Google untuk langsung menerapkan perubahan
+      return true;
+    }
+  }
+  return false;
+}
+
+// Fungsi untuk Update Data
+function updateData(obj) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName("Data");
+  const data = sheet.getDataRange().getValues();
+  
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][0] == obj.no) {
+      // Update baris tersebut (No tidak diubah)
+      sheet.getRange(i + 1, 2, 1, 4).setValues([[
+        obj.tanggal,
+        obj.jenis,
+        obj.uraian,
+        parseFloat(obj.jumlah)
+      ]]);
+      return "Berhasil diupdate";
+    }
+  }
+}
